@@ -21,7 +21,7 @@ def testGemini():
     # print(r.status_code)
     # print(r.json())
     output = jsonResponse["candidates"][0]["output"]
-    return render_template('index.html', output=output)
+    return render_template('index.html', output=output, prompt=jsonData["prompt"]["text"])
 
 
 if __name__ == "__main__":
