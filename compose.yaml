@@ -1,0 +1,43 @@
+services:
+
+  gemini-proxy:
+    container_name: gemini-proxy
+    image: nginx
+    volumes:
+      - ./nginx/nginx.conf:/tmp/nginx.conf
+    environment:
+      - FLASK_SERVER_ADDR=${FLASK_SERVER_NAME}:${FLASK_SERVER_PORT}
+    command: /bin/bash -c "envsubst < /tmp/nginx.conf > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
+    ports:
+      - 80:80
+    depends_on:
+      - gemini-web
+    networks:
+      gemini:
+        aliases:
+          - gemini-proxy
+
+  gemini-web:
+    container_name: gemini-web
+    build:
+      context: flask
+      target: builder
+    # flask requires SIGINT to stop gracefully
+    # (default stop signal from Compose is SIGTERM)
+    stop_signal: SIGINT
+    environment:
+      - FLASK_SERVER_PORT=${FLASK_SERVER_PORT}
+      - FLASK_DEBUG=${FLASK_DEBUG}
+      - GEMINI_API_URL=${GEMINI_API_URL}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    volumes:
+      - ./flask:/src
+    ports:
+      - ${FLASK_SERVER_PORT}:${FLASK_SERVER_PORT}
+    networks:
+      gemini:
+        aliases:
+          - gemini-web
+
+networks:
+  gemini:
